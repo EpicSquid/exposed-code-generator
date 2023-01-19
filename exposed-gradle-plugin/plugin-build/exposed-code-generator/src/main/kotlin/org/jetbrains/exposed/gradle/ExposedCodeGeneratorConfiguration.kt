@@ -9,5 +9,6 @@ data class ExposedCodeGeneratorConfiguration(
         val generatedFileName: String? = if (generateSingleFile) "" else null,
         val collate: String? = null,
         val columnMappings: Map<String, String> = emptyMap(),
-        val dateTimeProvider: String? = null
+        val dateTimeProvider: String? = null,
+        val useFullNames: Boolean = generateSingleFile
 )
