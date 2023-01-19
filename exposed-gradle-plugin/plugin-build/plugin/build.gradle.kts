@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm")
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish")
+    id("maven-publish")
 }
 
 repositories {
@@ -11,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    api("com.jetbrains.exposed.gradle:exposed-code-generator")
+    compileOnly("com.jetbrains.exposed.gradle:exposed-code-generator")
     implementation(kotlin("stdlib-jdk8"))
     implementation(gradleApi())
 
