@@ -82,6 +82,14 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 
     @get:Input
     @get:Option(
+        option = "useFullNames",
+        description = "If generateSingleFile is false, set to false to use the same name as the Table object for the file name"
+    )
+    @get:Optional
+    abstract val useFullNames: Property<Boolean>
+
+    @get:Input
+    @get:Option(
         option = "generatedFileName",
         description = "If generatedSingleFile is set to true, this will be the name of the file generated"
     )
@@ -148,8 +156,8 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
                     generatedFileName.orNull,
                     collate.orNull,
                     columnMappings.getOrElse(emptyMap()),
-                    dateTimeProvider.orNull
-
+                    dateTimeProvider.orNull,
+                    useFullNames.getOrElse(true),
             )
             ExposedCodeGenerator(tables, config)
         }
