@@ -28,6 +28,7 @@ abstract class ExposedGradlePlugin : Plugin<Project> {
             it.packageName.set(getStringProperty(project, extension, "packageName"))
             it.generateSingleFile.set(getProperty(project, extension, "generateSingleFile") as Boolean)
             it.useFullNames.set(getProperty(project, extension, "useFullNames") as Boolean)
+            it.useDao.set(getProperty(project, extension, "useDao") as Boolean)
             it.generatedFileName.set(getStringProperty(project, extension, "generatedFileName"))
             it.collate.set(getStringProperty(project, extension, "collate"))
             // TODO

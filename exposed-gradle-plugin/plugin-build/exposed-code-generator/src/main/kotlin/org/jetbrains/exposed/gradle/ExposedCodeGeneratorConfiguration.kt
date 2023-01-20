@@ -10,5 +10,6 @@ data class ExposedCodeGeneratorConfiguration(
         val collate: String? = null,
         val columnMappings: Map<String, String> = emptyMap(),
         val dateTimeProvider: String? = null,
-        val useFullNames: Boolean = generateSingleFile
+        val useFullNames: Boolean = generateSingleFile,
+        val useDao: Boolean = false
 )

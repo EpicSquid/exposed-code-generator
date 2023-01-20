@@ -42,4 +42,5 @@ abstract class ExposedGradleExtension @Inject constructor(project: Project) {
     var dateTimeProvider: String? = null
     var generateSingleFile: Boolean = false
     var useFullNames: Boolean = true
+    var useDao: Boolean = false
 }

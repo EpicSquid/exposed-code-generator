@@ -34,6 +34,13 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
             val column = columnInfo.column
             throw UnsupportedTypeException("Unable to map column ${column.name} of type ${column.columnDataType.fullName} to an Exposed column object.")
         }
+        if (data.configuration.useDao && columnInfo.column.referencedColumn != null) {
+            return PropertySpec.builder(
+                getPropertyNameForColumn(columnInfo.column),
+                ExposedColumn::class.asTypeName().parameterizedBy(EntityID::class.asTypeName().parameterizedBy(
+                    columnInfo.columnKClass!!.asTypeName().copy(nullable = columnInfo.nullable)))
+            )
+        }
         return PropertySpec.builder(
                 getPropertyNameForColumn(columnInfo.column),
                 ExposedColumn::class.asTypeName().parameterizedBy(columnInfo.columnKClass!!.asTypeName().copy(nullable = columnInfo.nullable))
@@ -49,7 +56,7 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
             columnToTableSpec: Map<Column, TypeSpec>
     ) {
         val initializerBlock = buildCodeBlock {
-            generateExposedColumnFunctionCall(columnInfo)
+            generateExposedColumnFunctionCall(columnInfo, columnToPropertySpec, columnToTableSpec)
             generateExposedColumnConstraints(columnInfo, columnToPropertySpec, columnToTableSpec)
         }
 
@@ -59,7 +66,11 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
     /**
      * Generates an Exposed function call used to initialize the column from [columnInfo].
      */
-    open fun CodeBlock.Builder.generateExposedColumnFunctionCall(columnInfo: ColumnInfo) {
+    open fun CodeBlock.Builder.generateExposedColumnFunctionCall(
+        columnInfo: ColumnInfo,
+        columnToPropertySpec: Map<Column, PropertySpec>,
+        columnToTableSpec: Map<Column, TypeSpec>
+    ) {
         val column = columnInfo.column
         val columnKClass = columnInfo.columnKClass!!
         val columnExposedFunction = columnInfo.columnExposedFunction!!
@@ -71,7 +82,13 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
         }
         val memberName = MemberName(packageName, columnExposedFunction.name)
 
-        if (columnInfo.columnExposedFunction!!.valueParameters.size > 1) {
+        if (data.configuration.useDao && column.referencedColumn != null) {
+            val referencedColumnTable = columnToTableSpec[column.referencedColumn]
+            add("%M(%S, %N)",
+                memberName,
+                columnInfo.columnName,
+                referencedColumnTable)
+        } else if (columnInfo.columnExposedFunction!!.valueParameters.size > 1) {
             val arguments = getColumnFunctionArguments()
             when (columnKClass) {
                 // decimal -> precision, scale
@@ -132,7 +149,7 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
             columnToPropertySpec: Map<Column, PropertySpec>,
             columnToTableSpec: Map<Column, TypeSpec>
     ) {
-        if (column.referencedColumn != null) {
+        if (!data.configuration.useDao && column.referencedColumn != null) {
             val referencedColumnProperty = columnToPropertySpec[column.referencedColumn]
                     ?: throw ReferencedColumnNotFoundException(
                             "Column ${column.referencedColumn.fullName} referenced by ${column.fullName} not found."
@@ -351,7 +368,11 @@ open class MappedColumnBuilder(column: Column, private val columnMapping: String
             ExposedColumn::class.asTypeName().parameterizedBy(mappedColumnType.asTypeName().copy(nullable = columnInfo.nullable))
     )
 
-    override fun CodeBlock.Builder.generateExposedColumnFunctionCall(columnInfo: ColumnInfo) {
+    override fun CodeBlock.Builder.generateExposedColumnFunctionCall(
+        columnInfo: ColumnInfo,
+        columnToPropertySpec: Map<Column, PropertySpec>,
+        columnToTableSpec: Map<Column, TypeSpec>
+    ) {
         add(CodeBlock.of(columnMapping))
     }
 }

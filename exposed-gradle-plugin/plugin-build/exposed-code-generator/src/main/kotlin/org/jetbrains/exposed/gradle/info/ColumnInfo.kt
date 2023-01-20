@@ -39,7 +39,7 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 
         fun <T : Any> initializeColumnParameters(columnClass: KClass<out T>, columnFunction: KFunction<ExposedColumn<T>>) {
             columnKClass = columnClass
-            columnExposedFunction = columnFunction
+            columnExposedFunction = if (data.configuration.useDao && column.referencedColumn != null) getExposedFunction<T>("reference") else columnFunction
         }
 
         fun initializeInteger() {
