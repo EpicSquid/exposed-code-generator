@@ -90,6 +90,14 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 
     @get:Input
     @get:Option(
+        option = "useDao",
+        description = "Enable the use of DAO classes when generating files."
+    )
+    @get:Optional
+    abstract val useDao: Property<Boolean>
+
+    @get:Input
+    @get:Option(
         option = "generatedFileName",
         description = "If generatedSingleFile is set to true, this will be the name of the file generated"
     )
@@ -158,6 +166,7 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
                     columnMappings.getOrElse(emptyMap()),
                     dateTimeProvider.orNull,
                     useFullNames.getOrElse(true),
+                    useDao.getOrElse(false)
             )
             ExposedCodeGenerator(tables, config)
         }
