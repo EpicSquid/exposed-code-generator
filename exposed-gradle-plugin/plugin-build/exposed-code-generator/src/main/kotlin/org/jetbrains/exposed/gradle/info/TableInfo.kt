@@ -11,7 +11,7 @@ import schemacrawler.schema.Table
 import java.util.*
 
 data class TableInfo(val table: Table, private val data: TableBuilderData) {
-    val primaryKeyColumns: List<Column> = if (table.hasPrimaryKey()) table.primaryKey.columns else emptyList()
+    val primaryKeyColumns: List<Column> = if (table.hasPrimaryKey()) table.primaryKey.constrainedColumns else emptyList()
     val idColumn: Column? = if (primaryKeyColumns.size == 1) {
         val column = primaryKeyColumns[0]
         val columnInfo = ColumnInfo(column, data)

@@ -3,14 +3,17 @@ package org.jetbrains.exposed.gradle
 import schemacrawler.crawl.SchemaCrawler
 import schemacrawler.schema.Table
 import schemacrawler.schemacrawler.*
-import schemacrawler.tools.databaseconnector.DatabaseConnectionSource
-import schemacrawler.tools.databaseconnector.SingleUseUserCredentials
+import us.fatehi.utility.datasource.DatabaseConnectionSource
+import us.fatehi.utility.datasource.DatabaseConnectionSourceBuilder
+import us.fatehi.utility.datasource.MultiUseUserCredentials
+import us.fatehi.utility.datasource.UserCredentials
 
 /**
  * Connects to a database and retrieves its tables.
  */
 class MetadataGetter {
-    private val dataSource: DatabaseConnectionSource
+    private val dataSourceBuilder: DatabaseConnectionSourceBuilder
+    private val connectionString: String
 
     constructor(
             databaseDriver: String,
@@ -36,21 +39,25 @@ class MetadataGetter {
                 append("/")
             }
         }
-        dataSource = DatabaseConnectionSource("jdbc:$databaseDriver:$hostPortString$databaseName", additionalProperties.orEmpty())
-        initDataSource(dataSource, user, password)
+        connectionString = "jdbc:$databaseDriver:$hostPortString$databaseName"
+        dataSourceBuilder = DatabaseConnectionSourceBuilder
+            .builder(connectionString)
+            .withUrlx(additionalProperties.orEmpty())
+        initDataSource(dataSourceBuilder, user, password)
     }
 
     constructor(connection: () -> String, user: String? = null, password: String? = null, additionalProperties: Map<String, String>? = null) {
-        dataSource = DatabaseConnectionSource(connection(), additionalProperties.orEmpty())
-        initDataSource(dataSource, user, password)
+        connectionString = connection()
+        dataSourceBuilder = DatabaseConnectionSourceBuilder.builder(connectionString).withUrlx(additionalProperties.orEmpty())
+        initDataSource(dataSourceBuilder, user, password)
     }
 
-    private fun initDataSource(dataSource: DatabaseConnectionSource, user: String?, password: String?) {
+    private fun initDataSource(dataSource: DatabaseConnectionSourceBuilder, user: String?, password: String?) {
         if (user != null && password != null) {
-            dataSource.userCredentials = SingleUseUserCredentials(user, password)
+            dataSource.withUserCredentials(MultiUseUserCredentials(user, password))
         }
         // to prevent exceptions at driver registration
-        val driver = getDriver(dataSource.connectionUrl)
+        val driver = getDriver(connectionString)
         Class.forName(driver).getDeclaredConstructor().newInstance()
     }
 
@@ -67,7 +74,7 @@ class MetadataGetter {
     }
 
     /**
-     * Returns tables from the database connected via [dataSource].
+     * Returns tables from the database connected via [dataSourceBuilder].
      */
     fun getTables(): List<Table> {
         val options = SchemaCrawlerOptionsBuilder.newSchemaCrawlerOptions()
@@ -77,9 +84,10 @@ class MetadataGetter {
                 )
 
 
-        val connection = dataSource.get()
+        val ds = dataSourceBuilder.build()
+        val connection = ds.get()
         val retrievalOptions = SchemaRetrievalOptionsBuilder.builder().fromConnnection(connection).toOptions()
-        val catalog = SchemaCrawler(connection, retrievalOptions, options).crawl()
+        val catalog = SchemaCrawler(ds, retrievalOptions, options).crawl()
 //        return sortTablesByDependencies(catalog.schemas.flatMap { catalog.getTables(it) })
         return catalog.schemas.flatMap { catalog.getTables(it) }
     }

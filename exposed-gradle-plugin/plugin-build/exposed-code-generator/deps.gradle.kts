@@ -13,7 +13,7 @@ fun applyGeneratorDependencies(implementation: (group: String, artifactId: Strin
     implementation("org.jetbrains.exposed", "exposed-kotlin-datetime", exposedVersion)
     implementation("org.jetbrains.exposed", "exposed-jodatime", exposedVersion)
 
-    val schemaCrawlerVersion = "16.15.7"
+    val schemaCrawlerVersion = "16.19.7"
     implementation("us.fatehi", "schemacrawler", schemaCrawlerVersion)
     implementation("us.fatehi", "schemacrawler-mysql", schemaCrawlerVersion)
     implementation("us.fatehi", "schemacrawler-sqlite", schemaCrawlerVersion)
