@@ -38,7 +38,7 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
             return PropertySpec.builder(
                 getPropertyNameForColumn(columnInfo.column),
                 ExposedColumn::class.asTypeName().parameterizedBy(EntityID::class.asTypeName().parameterizedBy(
-                    columnInfo.columnKClass!!.asTypeName().copy(nullable = columnInfo.nullable)))
+                    columnInfo.columnKClass!!.asTypeName()).copy(nullable = columnInfo.nullable))
             )
         }
         return PropertySpec.builder(
