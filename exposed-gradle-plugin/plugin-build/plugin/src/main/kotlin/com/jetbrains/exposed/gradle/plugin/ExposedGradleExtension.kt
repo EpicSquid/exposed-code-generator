@@ -1,9 +1,9 @@
 package com.jetbrains.exposed.gradle.plugin
 
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
+import java.io.Serializable
 import javax.inject.Inject
 
 const val DEFAULT_OUTPUT_DIRECTORY = "tables"
@@ -43,4 +43,13 @@ abstract class ExposedGradleExtension @Inject constructor(project: Project) {
     var generateSingleFile: Boolean = false
     var useFullNames: Boolean = true
     var useDao: Boolean = false
+    var customMappings: NamedDomainObjectContainer<CustomColumnMapping> = objects.domainObjectContainer(CustomColumnMapping::class.java)
+}
+
+abstract class  CustomColumnMapping @Inject constructor(
+    val name: String,
+) : Serializable {
+    var columnPropertyClassName: String? = null
+    var columnFunctionName: String? = null
+    var isColumnTyped: Boolean = false
 }

@@ -30,9 +30,12 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
 
     private fun generateBuilder(): PropertySpec.Builder {
         val columnKClass = columnInfo.columnKClass
-        if (columnKClass == null && columnInfo.columnExposedFunction == null) {
+        if (columnKClass == null
+            && columnInfo.columnExposedFunction == null
+            && columnInfo.columnStringFunction == null
+            && columnInfo.columnStringPackage == null) {
             val column = columnInfo.column
-            throw UnsupportedTypeException("Unable to map column ${column.name} of type ${column.columnDataType.fullName} to an Exposed column object.")
+            throw UnsupportedTypeException("Unable to map column ${column.name} of type ${column.columnDataType.name} to an Exposed column object. ${data.configuration.customMappings}")
         }
         if (data.configuration.useDao && columnInfo.column.referencedColumn != null) {
             return PropertySpec.builder(
@@ -40,6 +43,13 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
                 ExposedColumn::class.asTypeName().parameterizedBy(EntityID::class.asTypeName().parameterizedBy(
                     columnInfo.columnKClass!!.asTypeName()).copy(nullable = columnInfo.nullable))
             )
+        }
+        if (columnKClass == null && columnInfo.columnStringClass != null) {
+            val pack = columnInfo.columnStringClass!!.substringBeforeLast(".")
+            val clazz = columnInfo.columnStringClass!!.substringAfterLast(".")
+            return PropertySpec.builder(
+                getPropertyNameForColumn(columnInfo.column),
+                ExposedColumn::class.asTypeName().parameterizedBy(ClassName(pack, clazz).copy(nullable = columnInfo.nullable)))
         }
         return PropertySpec.builder(
                 getPropertyNameForColumn(columnInfo.column),
@@ -72,15 +82,18 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
         columnToTableSpec: Map<Column, TypeSpec>
     ) {
         val column = columnInfo.column
-        val columnKClass = columnInfo.columnKClass!!
-        val columnExposedFunction = columnInfo.columnExposedFunction!!
-        val columnExposedPackage = columnExposedFunction.javaMethod!!.declaringClass.`package`
-        val packageName = if (columnExposedPackage == ExposedCodeGenerator.exposedPackage) {
-            ""
-        } else {
-            columnExposedPackage.name
-        }
-        val memberName = MemberName(packageName, columnExposedFunction.name)
+        val columnKClass = columnInfo.columnKClass
+        val columnExposedFunction = columnInfo.columnExposedFunction
+        val columnExposedPackage = columnExposedFunction?.javaMethod?.declaringClass?.`package`
+        val packageName = columnExposedPackage?.let {
+            if (columnExposedPackage == ExposedCodeGenerator.exposedPackage) {
+                ""
+            } else {
+                columnExposedPackage.name
+            }
+        } ?: columnInfo.columnStringPackage!!
+
+        val memberName = MemberName(packageName, columnExposedFunction?.name ?: columnInfo.columnStringFunction!!)
 
         if (data.configuration.useDao && column.referencedColumn != null) {
             val referencedColumnTable = columnToTableSpec[column.referencedColumn]
@@ -88,7 +101,7 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
                 memberName,
                 columnInfo.columnName,
                 referencedColumnTable)
-        } else if (columnInfo.columnExposedFunction!!.valueParameters.size > 1) {
+        } else if (columnInfo.columnExposedFunction != null && columnInfo.columnExposedFunction!!.valueParameters.size > 1) {
             val arguments = getColumnFunctionArguments()
             when (columnKClass) {
                 // decimal -> precision, scale
@@ -120,7 +133,7 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
                     } else {
                         CodeBlock.of("")
                     }
-                    if (columnExposedFunction.name in listOf("char", "varchar", "binary")) {
+                    if (columnExposedFunction?.name in listOf("char", "varchar", "binary")) {
                         val size = when {
                             arguments.isNotEmpty() -> arguments[0]
                             column.size >= 0 && column.size <= MaxSize.MAX_VARCHAR_SIZE -> column.size.toString()
@@ -131,10 +144,16 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
                         add("%M(%S$collate)", memberName, columnInfo.columnName)
                     }
 
-                } else -> add("%M(%S)", memberName, columnInfo.columnName)
+                }
+                else -> add("%M(%S)", memberName, columnInfo.columnName)
             }
         } else {
-            add("%M(%S)", memberName, columnInfo.columnName)
+            if (columnInfo.isColumnTyped)
+                add("%M<%L>(%S)",
+                    memberName,
+                    columnInfo.columnKClass?.simpleName ?: columnInfo.columnStringClass!!.substringAfterLast("."),
+                    columnInfo.columnName)
+            else add("%M(%S)", memberName, columnInfo.columnName)
         }
     }
 
@@ -345,6 +364,7 @@ class IdColumnBuilder(column: Column, data: TableBuilderData) : ColumnBuilder(co
 open class MappedColumnBuilder(column: Column, private val columnMapping: String, data: TableBuilderData) : ColumnBuilder(column, data) {
     protected val mappedColumnType = getColumnTypeByFunctionCall(columnMapping)
     private val dateTimeProvider = getDateTimeProviderFromConfig(data.configuration.dateTimeProvider)
+    private val customMappings = data.configuration.customMappings
 
     private fun getColumnTypeByFunctionCall(functionCall: String) = when (functionCall.takeWhile { it != '(' }) {
         "byte" -> Byte::class
@@ -360,6 +380,7 @@ open class MappedColumnBuilder(column: Column, private val columnMapping: String
         "char", "varchar", "text" -> String::class
         "date" -> dateTimeProvider.dateClass
         "datetime" -> dateTimeProvider.dateTimeClass
+        in customMappings -> Class.forName(customMappings[functionCall]!!.columnPropertyClassName).kotlin
         else -> throw UnparseableExposedCallException("Unable to determine type of expression $functionCall and generate column.")
     }
 

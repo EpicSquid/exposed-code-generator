@@ -1,5 +1,7 @@
 package org.jetbrains.exposed.gradle
 
+import java.io.Serializable
+
 /**
  * User configuration for generating Exposed code.
  */
@@ -11,5 +13,11 @@ data class ExposedCodeGeneratorConfiguration(
         val columnMappings: Map<String, String> = emptyMap(),
         val dateTimeProvider: String? = null,
         val useFullNames: Boolean = generateSingleFile,
-        val useDao: Boolean = false
+        val useDao: Boolean = false,
+        val customMappings: Map<String, CustomMappings> = emptyMap()
 )
+data class CustomMappings(
+        var columnPropertyClassName: String?,
+        var columnFunctionName: String?,
+        var isColumnTyped: Boolean = false
+) : Serializable

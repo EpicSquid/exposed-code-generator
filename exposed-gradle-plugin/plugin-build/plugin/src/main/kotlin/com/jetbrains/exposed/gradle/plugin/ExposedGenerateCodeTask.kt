@@ -1,6 +1,7 @@
 package com.jetbrains.exposed.gradle.plugin
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.provider.MapProperty
@@ -10,6 +11,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
+import org.jetbrains.exposed.gradle.CustomMappings
 import org.jetbrains.exposed.gradle.ExposedCodeGenerator
 import org.jetbrains.exposed.gradle.ExposedCodeGeneratorConfiguration
 import org.jetbrains.exposed.gradle.MetadataGetter
@@ -136,6 +138,16 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
     @get:Optional
     abstract val dateTimeProvider: Property<String>
 
+    @get:Input
+    @get:Option(
+        option = "customMappings",
+        description = "Set column mappings manually, in the form of [type] = ([fully-qualified class name], " +
+            "[fully-qualified function name]), " +
+            "e.g. jsonb = (com.example.jsonb.Jsonb, com.example.jsonb.jsonb)"
+    )
+    @get:Optional
+    abstract var customMappings: NamedDomainObjectContainer<CustomColumnMapping>
+
     @TaskAction
     fun generateExposedCode() {
         val metadataGetter = if (connectionURL.orNull != null) {
@@ -166,7 +178,12 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
                     columnMappings.getOrElse(emptyMap()),
                     dateTimeProvider.orNull,
                     useFullNames.getOrElse(true),
-                    useDao.getOrElse(false)
+                    useDao.getOrElse(false),
+                    customMappings.asMap.map { (key, value) -> key to CustomMappings(
+                        value.columnPropertyClassName,
+                        value.columnFunctionName,
+                        value.isColumnTyped
+                    ) }.toMap()
             )
             ExposedCodeGenerator(tables, config)
         }

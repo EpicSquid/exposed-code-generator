@@ -27,6 +27,20 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
     var columnExposedFunction: KFunction<*>? = null
         private set
 
+    // The following are set when adding custom columns
+
+    var columnStringClass: String? = null
+        private set
+
+    var columnStringPackage: String? = null
+        private set
+
+    var columnStringFunction: String? = null
+        private set
+
+    var isColumnTyped: Boolean = false
+        private set
+
     var nullable: Boolean = column.isNullable && !column.isPartOfPrimaryKey
 
     init {
@@ -88,7 +102,6 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
             }
         }
 
-
         when (column.columnDataType.typeMappedClass) {
             Integer::class.javaObjectType -> initializeInteger()
             Long::class.javaObjectType -> initializeColumnParameters(Long::class, getExposedFunction("long"))
@@ -100,7 +113,6 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
             Clob::class.javaObjectType -> initializeColumnParameters(String::class, getExposedFunction("text"))
             Blob::class.javaObjectType -> initializeColumnParameters(ExposedBlob::class, getExposedFunction("blob"))
             UUID::class.javaObjectType -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
-            Object::class.javaObjectType -> initializeObject()
             Date::class.javaObjectType, dateTimeProvider.dateClass.javaObjectType ->
                 initializeColumnParameters(dateTimeProvider.dateClass, dateTimeProvider.dateTableFun())
             Timestamp::class.javaObjectType, dateTimeProvider.dateTimeClass.javaObjectType ->
@@ -112,6 +124,15 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
                     // can be 'varbinary'
                     name.contains("binary") || name.contains("bytea") -> {
                         initializeColumnParameters(ByteArray::class, exposedBinary)
+                    }
+                    name in data.configuration.customMappings -> {
+                        val customMapping = data.configuration.customMappings[name]!!
+                        val funName = customMapping.columnFunctionName!!
+
+                        columnStringClass = customMapping.columnPropertyClassName
+                        columnStringFunction = funName.substringAfterLast(".")
+                        columnStringPackage = funName.substringBeforeLast(".")
+                        isColumnTyped = customMapping.isColumnTyped
                     }
                 }
             }

@@ -37,6 +37,8 @@ abstract class ExposedGradlePlugin : Plugin<Project> {
             it.configFilename.set(extension.configFilename)
 
             it.outputDirectory.set(extension.outputDirectory)
+
+            it.customMappings = extension.customMappings
         }
     }
 
