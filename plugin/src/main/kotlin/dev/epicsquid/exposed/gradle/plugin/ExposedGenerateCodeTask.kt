@@ -8,6 +8,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.plugins.BasePlugin
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -140,6 +141,14 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 	@get:Optional
 	abstract var customMappings: NamedDomainObjectContainer<CustomColumnMapping>
 
+	@get:Input
+	@get:Option(
+		option = "ignoreTables",
+		description = "List of tables to ignore when generating code"
+	)
+	@get:Optional
+	abstract val ignoreTables: ListProperty<String>
+
 	@TaskAction
 	fun generateExposedCode() {
 		val metadataGetter = if (connectionUrl.orNull != null) {
@@ -174,7 +183,8 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 					value.isColumnTyped,
 					value.existingColumn
 				)
-			}.toMap()
+			}.toMap(),
+			ignoreTables.getOrElse(emptyList())
 		)
 		val exposedCodeGenerator = ExposedCodeGenerator(tables, config)
 

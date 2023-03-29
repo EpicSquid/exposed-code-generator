@@ -28,14 +28,14 @@ class ExposedCodeGenerator {
 		config: ExposedCodeGeneratorConfiguration = ExposedCodeGeneratorConfiguration(),
 		dialect: DBDialect? = null
 	) {
-		this.tables = tables
 		this.configuration = config
+		this.tables = tables.filter { it.fullName !in configuration.ignoreTables }
 		this.dialect = dialect
 	}
 
 	constructor(tables: List<Table>, configFileName: String, dialect: DBDialect? = null) {
-		this.tables = tables
 		this.configuration = ConfigLoader().loadConfigOrThrow(files = listOf(File(configFileName)))
+		this.tables = tables.filter { it.fullName !in configuration.ignoreTables }
 		this.dialect = dialect
 	}
 
@@ -87,7 +87,7 @@ class ExposedCodeGenerator {
 			listOf(fileSpec.build())
 		} else {
 			val fileSpecs = mutableListOf<FileSpec>()
-			for (table in tables) {
+			tables.forEach { table ->
 				val fileSpec = FileSpec.builder(
 					configuration.packageName,
 					if (configuration.useFullNames) table.fullName.toCamelCase(capitalizeFirst = true)

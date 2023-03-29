@@ -13,7 +13,8 @@ data class ExposedCodeGeneratorConfiguration(
 	val dateTimeProvider: String? = null,
 	val useFullNames: Boolean = generateSingleFile,
 	val useDao: Boolean = false,
-	val customMappings: Map<String, CustomMappings> = emptyMap()
+	val customMappings: Map<String, CustomMappings> = emptyMap(),
+	val ignoreTables: List<String> = emptyList()
 )
 
 data class CustomMappings(

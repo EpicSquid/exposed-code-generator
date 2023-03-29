@@ -6,7 +6,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -18,34 +17,35 @@ abstract class ExposedGradleExtension @Inject constructor(
 	project: Project
 ) : ExtensionAware {
 
-	var packageName: Property<String?> = objects.nullableProperty()
+	var packageName: String? = null
 
-	var generatedFileName: Property<String?> = objects.nullableProperty()
-	var collate: Property<String?> = objects.nullableProperty()
+	var generatedFileName: String? = null
+	var collate: String? = null
 
 	var outputDirectory: DirectoryProperty = objects.directoryProperty().convention(
 		project.layout.buildDirectory.dir(DEFAULT_OUTPUT_DIRECTORY)
 	)
 
-	var dateTimeProvider: Property<String?> = objects.nullableProperty()
-	var generateSingleFile: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
-	var useFullNames: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
-	var useDao: Property<Boolean> = objects.property(Boolean::class.java).convention(false)
+	var dateTimeProvider: String? = null
+	var generateSingleFile: Boolean = false
+	var useFullNames: Boolean = false
+	var useDao: Boolean = false
 	var customMappings: NamedDomainObjectContainer<CustomColumnMapping> = objects.domainObjectContainer(
 		CustomColumnMapping::class.java
 	)
+	var ignoreTables: List<String> = listOf()
 }
 
 abstract class ExposedDatabaseConnectionExtension @Inject constructor(objects: ObjectFactory) {
-	var databaseDriver: Property<String> = objects.property(String::class.java)
-	var databaseName: Property<String> = objects.property(String::class.java)
-	var user: Property<String?> = objects.nullableProperty()
-	var password: Property<String?> = objects.nullableProperty()
-	var host: Property<String?> = objects.nullableProperty()
-	var port: Property<String?> = objects.nullableProperty()
-	var ipv6Host: Property<String?> = objects.nullableProperty()
-	var connectionUrl: Property<String?> = objects.nullableProperty()
-	var connectionProperties: MapProperty<String, String> = objects.mapProperty(String::class.java, String::class.java)
+	var databaseDriver: String? = null
+	var databaseName: String? = null
+	var user: String? = null
+	var password: String? = null
+	var host: String? = null
+	var port: String? = null
+	var ipv6Host: String? = null
+	var connectionUrl: String? = null
+	var connectionProperties: Map<String, String> = mapOf()
 }
 
 abstract class CustomColumnMapping @Inject constructor(

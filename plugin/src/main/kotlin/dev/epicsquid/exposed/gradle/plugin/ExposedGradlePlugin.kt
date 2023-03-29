@@ -35,6 +35,7 @@ abstract class ExposedGradlePlugin : Plugin<Project> {
 			it.collate.set(extension.collate)
 			it.outputDirectory.set(extension.outputDirectory)
 			it.customMappings = extension.customMappings
+			it.ignoreTables.set(extension.ignoreTables)
 		}
 	}
 }
