@@ -5,7 +5,11 @@ pluginManagement {
     }
 }
 
-rootProject.name = "exposed-gradle"
+rootProject.name = "com.jetbrains.exposed.gradle.plugin"
 
-include(":example")
-includeBuild("plugin-build")
+include(":plugin")
+includeBuild("exposed-code-generator") {
+    dependencySubstitution {
+        substitute(module("com.jetbrains.exposed.gradle:exposed-code-generator")).with(project(":"))
+    }
+}
