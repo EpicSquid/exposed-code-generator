@@ -17,7 +17,7 @@ data class TableBuilderData(
 	val columnToPropertySpec: MutableMap<Column, PropertySpec>,
 	val columnToTableSpec: MutableMap<Column, TypeSpec>,
 	val columnNameToInitializerBlock: Map<String, String>,
-	val dialect: dev.epicsquid.exposed.gradle.DBDialect? = null,
+	val dialect: DBDialect? = null,
 	val configuration: ExposedCodeGeneratorConfiguration = ExposedCodeGeneratorConfiguration()
 )
 
@@ -92,7 +92,7 @@ class TableBuilder(
 
 				data.columnToPropertySpec[column] = columnPropertySpec
 			} catch (e: UnsupportedTypeException) {
-				dev.epicsquid.exposed.gradle.logger.error("Unsupported type", e)
+				logger.error("Unsupported type", e)
 			}
 		}
 	}

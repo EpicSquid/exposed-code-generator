@@ -20,20 +20,20 @@ import org.jetbrains.exposed.sql.Table as ExposedTable
  */
 class ExposedCodeGenerator {
 	private val tables: List<Table>
-	private val dialect: dev.epicsquid.exposed.gradle.DBDialect?
-	private val configuration: dev.epicsquid.exposed.gradle.ExposedCodeGeneratorConfiguration
+	private val dialect: DBDialect?
+	private val configuration: ExposedCodeGeneratorConfiguration
 
 	constructor(
 		tables: List<Table>,
-		config: dev.epicsquid.exposed.gradle.ExposedCodeGeneratorConfiguration = dev.epicsquid.exposed.gradle.ExposedCodeGeneratorConfiguration(),
-		dialect: dev.epicsquid.exposed.gradle.DBDialect? = null
+		config: ExposedCodeGeneratorConfiguration = ExposedCodeGeneratorConfiguration(),
+		dialect: DBDialect? = null
 	) {
 		this.tables = tables
 		this.configuration = config
 		this.dialect = dialect
 	}
 
-	constructor(tables: List<Table>, configFileName: String, dialect: dev.epicsquid.exposed.gradle.DBDialect? = null) {
+	constructor(tables: List<Table>, configFileName: String, dialect: DBDialect? = null) {
 		this.tables = tables
 		this.configuration = ConfigLoader().loadConfigOrThrow(files = listOf(File(configFileName)))
 		this.dialect = dialect
@@ -49,7 +49,7 @@ class ExposedCodeGenerator {
 	// returns a TypeSpec used for Exposed Kotlin code generation
 	private fun generateExposedTable(
 		table: Table,
-		configuration: dev.epicsquid.exposed.gradle.ExposedCodeGeneratorConfiguration = dev.epicsquid.exposed.gradle.ExposedCodeGeneratorConfiguration()
+		configuration: ExposedCodeGeneratorConfiguration = ExposedCodeGeneratorConfiguration()
 	): TypeSpec {
 		val builder = TableBuilder(
 			table,
@@ -68,15 +68,17 @@ class ExposedCodeGenerator {
 	 * Generates file specs for [tables] using [configuration] and minding [dialect] DB dialect.
 	 */
 	fun generateExposedTables(): List<FileSpec> {
-		if (configuration.columnMappings.isNotEmpty()) {
-			columnNameToInitializerBlock.putAll(configuration.columnMappings)
+		if (configuration.customMappings.isNotEmpty()) {
+			columnNameToInitializerBlock.putAll(configuration.customMappings.map { (key, value) ->
+				value.existingColumn?.let { key to it } ?: (key to key)
+			}.toMap())
 		}
 
 		return if (configuration.generateSingleFile) {
 			val fileSpec = FileSpec.builder(
 				configuration.packageName,
 				if (configuration.generatedFileName.isNullOrBlank()) {
-					dev.epicsquid.exposed.gradle.ExposedCodeGenerator.Companion.defaultFilename
+					defaultFilename
 				} else {
 					configuration.generatedFileName
 				}
@@ -105,7 +107,7 @@ class ExposedCodeGenerator {
 		private val publicVisibilityRegex = "(\\s+)*public (.+)".toRegex(RegexOption.MULTILINE)
 
 		fun postProcessOutput(content: String): String {
-			return content.replace(dev.epicsquid.exposed.gradle.ExposedCodeGenerator.Companion.publicVisibilityRegex, "$1$2")
+			return content.replace(publicVisibilityRegex, "$1$2")
 		}
 	}
 }

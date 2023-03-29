@@ -101,46 +101,41 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 			}
 		}
 
-		fun initializeObject() {
-			when (column.columnDataType.name.lowercase()) {
-				"uuid" -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
-			}
-		}
+		val name = column.columnDataType.name.lowercase()
+		// If the column has a custom type for it then override the default case
+		if (name in data.configuration.customMappings) {
+			val customMapping = data.configuration.customMappings[name]!!
+			val funName = customMapping.columnFunctionName!!
 
-		when (column.columnDataType.typeMappedClass) {
-			Integer::class.javaObjectType -> initializeInteger()
-			Long::class.javaObjectType -> initializeColumnParameters(Long::class, getExposedFunction("long"))
-			BigDecimal::class.javaObjectType -> initializeColumnParameters(BigDecimal::class, getExposedFunction("decimal"))
-			Float::class.javaObjectType -> initializeColumnParameters(Float::class, getExposedFunction("float"))
-			Double::class.javaObjectType -> initializeDouble()
-			Boolean::class.javaObjectType -> initializeColumnParameters(Boolean::class, getExposedFunction("bool"))
-			String::class.javaObjectType -> initializeString()
-			Clob::class.javaObjectType -> initializeColumnParameters(String::class, getExposedFunction("text"))
-			Blob::class.javaObjectType -> initializeColumnParameters(ExposedBlob::class, getExposedFunction("blob"))
-			UUID::class.javaObjectType -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
-			Date::class.javaObjectType, dateTimeProvider.dateClass.javaObjectType ->
-				initializeColumnParameters(dateTimeProvider.dateClass, dateTimeProvider.dateTableFun())
+			columnStringClass = customMapping.columnPropertyClassName
+			columnStringFunction = funName.substringAfterLast(".")
+			columnStringPackage = funName.substringBeforeLast(".")
+			isColumnTyped = customMapping.isColumnTyped
+		} else {
+			when (column.columnDataType.typeMappedClass) {
+				Integer::class.javaObjectType -> initializeInteger()
+				Long::class.javaObjectType -> initializeColumnParameters(Long::class, getExposedFunction("long"))
+				BigDecimal::class.javaObjectType -> initializeColumnParameters(BigDecimal::class, getExposedFunction("decimal"))
+				Float::class.javaObjectType -> initializeColumnParameters(Float::class, getExposedFunction("float"))
+				Double::class.javaObjectType -> initializeDouble()
+				Boolean::class.javaObjectType -> initializeColumnParameters(Boolean::class, getExposedFunction("bool"))
+				String::class.javaObjectType -> initializeString()
+				Clob::class.javaObjectType -> initializeColumnParameters(String::class, getExposedFunction("text"))
+				Blob::class.javaObjectType -> initializeColumnParameters(ExposedBlob::class, getExposedFunction("blob"))
+				UUID::class.javaObjectType -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
+				Date::class.javaObjectType, dateTimeProvider.dateClass.javaObjectType ->
+					initializeColumnParameters(dateTimeProvider.dateClass, dateTimeProvider.dateTableFun())
 
-			Timestamp::class.javaObjectType, dateTimeProvider.dateTimeClass.javaObjectType ->
-				initializeColumnParameters(dateTimeProvider.dateTimeClass, dateTimeProvider.dateTimeTableFun())
+				Timestamp::class.javaObjectType, dateTimeProvider.dateTimeClass.javaObjectType ->
+					initializeColumnParameters(dateTimeProvider.dateTimeClass, dateTimeProvider.dateTimeTableFun())
 
-			else -> {
-				val name = column.columnDataType.name.lowercase()
-				when {
-					name.contains("uuid") -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
-					// can be 'varbinary'
-					name.contains("binary") || name.contains("bytea") -> {
-						initializeColumnParameters(ByteArray::class, exposedBinary)
-					}
-
-					name in data.configuration.customMappings -> {
-						val customMapping = data.configuration.customMappings[name]!!
-						val funName = customMapping.columnFunctionName!!
-
-						columnStringClass = customMapping.columnPropertyClassName
-						columnStringFunction = funName.substringAfterLast(".")
-						columnStringPackage = funName.substringBeforeLast(".")
-						isColumnTyped = customMapping.isColumnTyped
+				else -> {
+					when {
+						name.contains("uuid") -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
+						// can be 'varbinary'
+						name.contains("binary") || name.contains("bytea") -> {
+							initializeColumnParameters(ByteArray::class, exposedBinary)
+						}
 					}
 				}
 			}

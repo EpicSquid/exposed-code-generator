@@ -1,6 +1,7 @@
 package dev.epicsquid.exposed.gradle.plugin
 
 import dev.epicsquid.exposed.gradle.CustomMappings
+import dev.epicsquid.exposed.gradle.ExposedCodeGenerator
 import dev.epicsquid.exposed.gradle.ExposedCodeGeneratorConfiguration
 import dev.epicsquid.exposed.gradle.MetadataGetter
 import org.gradle.api.DefaultTask
@@ -64,7 +65,7 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 	@get:Input
 	@get:Option(option = "connectionURL", description = "full connection URL")
 	@get:Optional
-	abstract val connectionURL: Property<String>
+	abstract val connectionUrl: Property<String>
 
 	@get:Input
 	@get:Option(
@@ -116,20 +117,6 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 	@get:Optional
 	abstract val collate: Property<String>
 
-	@get:Input
-	@get:Option(
-		option = "columnMappings",
-		description = "Set column mappings manually, in the form of [tableName].[columnName] = [exposed function call], " +
-				"e.g. testTable.floatColumn = float(\"float_column\")"
-	)
-	@get:Optional
-	abstract val columnMappings: MapProperty<String, String>
-
-	@get:Input
-	@get:Option(option = "configFilename", description = "Config filename")
-	@get:Optional
-	abstract val configFilename: Property<String>
-
 
 	@get:OutputDirectory
 	abstract val outputDirectory: DirectoryProperty
@@ -155,8 +142,8 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 
 	@TaskAction
 	fun generateExposedCode() {
-		val metadataGetter = if (connectionURL.orNull != null) {
-			MetadataGetter({ connectionURL.get() }, user.orNull, password.orNull, connectionProperties.orNull)
+		val metadataGetter = if (connectionUrl.orNull != null) {
+			MetadataGetter({ connectionUrl.get() }, user.orNull, password.orNull, connectionProperties.orNull)
 		} else {
 			MetadataGetter(
 				databaseDriver.get(),
@@ -172,28 +159,25 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 
 
 		val tables = metadataGetter.getTables().filterUtilTables()
-		val exposedCodeGenerator = if (configFilename.orNull != null) {
-			dev.epicsquid.exposed.gradle.ExposedCodeGenerator(tables, configFilename.get())
-		} else {
-			val config = ExposedCodeGeneratorConfiguration(
-				packageName.getOrElse(""),
-				generateSingleFile.getOrElse(true),
-				generatedFileName.orNull,
-				collate.orNull,
-				columnMappings.getOrElse(emptyMap()),
-				dateTimeProvider.orNull,
-				useFullNames.getOrElse(true),
-				useDao.getOrElse(false),
-				customMappings.asMap.map { (key, value) ->
-					key to CustomMappings(
-						value.columnPropertyClassName,
-						value.columnFunctionName,
-						value.isColumnTyped
-					)
-				}.toMap()
-			)
-			dev.epicsquid.exposed.gradle.ExposedCodeGenerator(tables, config)
-		}
+		val config = ExposedCodeGeneratorConfiguration(
+			packageName.getOrElse(""),
+			generateSingleFile.getOrElse(true),
+			generatedFileName.orNull,
+			collate.orNull,
+			dateTimeProvider.orNull,
+			useFullNames.getOrElse(true),
+			useDao.getOrElse(false),
+			customMappings.asMap.map { (key, value) ->
+				key to CustomMappings(
+					value.columnPropertyClassName,
+					value.columnFunctionName,
+					value.isColumnTyped,
+					value.existingColumn
+				)
+			}.toMap()
+		)
+		val exposedCodeGenerator = ExposedCodeGenerator(tables, config)
+
 		val files = exposedCodeGenerator.generateExposedTables()
 
 		files.forEach {
@@ -201,7 +185,7 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 			it.writeTo(directory.asFile)
 			val generatedFile = directory.file(it.toJavaFileObject().name).asFile
 			val generatedContent = generatedFile.readText()
-			generatedFile.writeText(dev.epicsquid.exposed.gradle.ExposedCodeGenerator.postProcessOutput(generatedContent))
+			generatedFile.writeText(ExposedCodeGenerator.postProcessOutput(generatedContent))
 		}
 	}
 
