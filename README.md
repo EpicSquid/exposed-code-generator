@@ -1,8 +1,6 @@
 # Exposed Code Generation Gradle Plugin
-[![JetBrains team project](https://jb.gg/badges/team.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Kotlinlang Slack Channel](https://img.shields.io/badge/slack-@kotlinlang/exposed-yellow.svg?logo=slack?style=flat)](https://kotlinlang.slack.com/archives/C0CG7E0A1)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Maven metadata URL](https://img.shields.io/maven-metadata/v?label=Gradle%20Plugin&metadataUrl=https%3A%2F%2Fplugins.gradle.org%2Fm2%2Fcom%2Fjetbrains%2Fexposed%2Fgradle%2Fplugin%2Fcom.jetbrains.exposed.gradle.plugin.gradle.plugin%2Fmaven-metadata.xml)](https://plugins.gradle.org/plugin/com.jetbrains.exposed.gradle.plugin)
 
 This Gradle plugin connects to a database and generates Exposed table definitions for all of its tables.
 
@@ -11,7 +9,7 @@ This Gradle plugin connects to a database and generates Exposed table definition
 Add plugin declaration into your build script:
 ```kotlin
 plugins {
-    id("com.jetbrains.exposed.gradle.plugin")
+    id("dev.epicsquid.exposed.gradle.plugin")
 }
 ```
 Use gradle task as
@@ -19,35 +17,7 @@ Use gradle task as
 `gradle generateExposedCode`
 
 ### How to specify parameters:
-
-* Using task properties:
-
-`gradle generateExposedCode --connectionURL jdbc:postgresql:staff`
-
-* Using system variables
-
-`gradle generateExposedCode -DconnectionURL=jdbc:postgresql:staff`
-
-* Using environment variables
-
-* Using project variables
-
-`gradle generateExposedCode -PconnectionURL=jdbc:postgresql:staff`
-
-* Using a .properties file and specifying its filepath
-
-```kotlin
-exposedCodeGeneratorConfig {
-    propertiesFilename = "exposedPluginProps.properties"
-}
-```
-
-`exposedPluginProps.properties:`
-```
-connectionURL=jdbc:postgresql:testone?user=postgres&password=testing
-```
-
-* Using a task configuration in a `build.gradle` file
+Using a task configuration in a `build.gradle` file
 
 ```kotlin
 exposedCodeGeneratorConfig {
@@ -57,9 +27,6 @@ exposedCodeGeneratorConfig {
     configFilepath = "exposedCodeGeneratorConfig.yml"
 }
 ```
-
-It is strongly recommended to avoid mixing different ways of specifying parameters.
-
 ### Database connection parameters:
 
 1. `connectionURL` -- connection URL as used with JDBC (e.g. `jdbc:postgresql://localhost:12346/user=postgres&password=`)
