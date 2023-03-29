@@ -36,7 +36,7 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
 			&& columnInfo.columnStringPackage == null
 		) {
 			val column = columnInfo.column
-			throw UnsupportedTypeException("Unable to map column ${column.name} of type ${column.columnDataType.name} to an Exposed column object. ${data.configuration.customMappings}")
+			throw UnsupportedTypeException("Unable to map column ${column.name} of type ${column.columnDataType.name} to an Exposed column object.")
 		}
 		if (data.configuration.useDao && columnInfo.column.referencedColumn != null) {
 			return PropertySpec.builder(

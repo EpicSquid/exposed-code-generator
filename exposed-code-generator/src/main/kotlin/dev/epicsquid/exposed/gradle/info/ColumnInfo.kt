@@ -100,11 +100,11 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 				name.contains("single") -> initializeColumnParameters(Float::class, getExposedFunction("float"))
 			}
 		}
+		val columnName = column.name
 
-		val name = column.columnDataType.name.lowercase()
 		// If the column has a custom type for it then override the default case
-		if (name in data.configuration.customMappings) {
-			val customMapping = data.configuration.customMappings[name]!!
+		if (columnName in data.configuration.customMappings) {
+			val customMapping = data.configuration.customMappings[columnName]!!
 			val funName = customMapping.columnFunctionName!!
 
 			columnStringClass = customMapping.columnPropertyClassName
@@ -130,6 +130,8 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 					initializeColumnParameters(dateTimeProvider.dateTimeClass, dateTimeProvider.dateTimeTableFun())
 
 				else -> {
+					val name = column.columnDataType.name.lowercase()
+
 					when {
 						name.contains("uuid") -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
 						// can be 'varbinary'
