@@ -5,7 +5,7 @@ object PluginCoordinates {
     const val IMPLEMENTATION_CLASS = "com.jetbrains.exposed.gradle.plugin.ExposedGradlePlugin"
 }
 
-object PluginBundle {
+object PluginBundle { // TODO update this after repo rename
     const val VCS = "https://github.com/JetBrains/exposed-intellij-plugin"
     const val WEBSITE = "https://github.com/JetBrains/exposed-intellij-plugin/tree/master/exposed-gradle-plugin"
     const val DESCRIPTION = "Exposed ORM framework gradle plugin"
