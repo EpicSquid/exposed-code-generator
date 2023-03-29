@@ -3,8 +3,6 @@ package dev.epicsquid.exposed.gradle.info
 import dev.epicsquid.exposed.gradle.builders.TableBuilderData
 import dev.epicsquid.exposed.gradle.getColumnName
 import dev.epicsquid.exposed.gradle.time.getDateTimeProviderFromConfig
-import org.jetbrains.exposed.gradle.getColumnName
-import org.jetbrains.exposed.gradle.time.getDateTimeProviderFromConfig
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import schemacrawler.schema.Column
