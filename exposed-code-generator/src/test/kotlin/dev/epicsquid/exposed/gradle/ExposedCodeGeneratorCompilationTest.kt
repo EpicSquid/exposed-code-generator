@@ -88,7 +88,7 @@ class CompilationResultChecker(private val result: KotlinCompilation.Result) {
                     result.classLoader.loadClass("${formPackageName(packageName)}$foreignKeyTargetTable").kotlin.objectInstance
                 }!!
                 val target = foreignKeyTargetTableObject::class.memberProperties
-                        .find { it.name == foreignKey.targetColumn.toLowerCase() }!!.getter.call(foreignKeyTargetTableObject)
+                        .find { it.name == foreignKey.targetColumn.lowercase() }!!.getter.call(foreignKeyTargetTableObject)
                 assertThat(foreignKey.target).isEqualTo(target)
             } else {
                 assertThat(columnValue.foreignKey).isNull()

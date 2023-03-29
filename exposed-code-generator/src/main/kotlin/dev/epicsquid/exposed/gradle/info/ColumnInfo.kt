@@ -58,7 +58,7 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 		}
 
 		fun initializeInteger() {
-			when (column.columnDataType.name.toLowerCase()) {
+			when (column.columnDataType.name.lowercase()) {
 				"tinyint" -> initializeColumnParameters(Byte::class, getExposedFunction("byte"))
 				"smallint", "int2" -> initializeColumnParameters(Short::class, getExposedFunction("short"))
 				"int8" -> initializeColumnParameters(Long::class, getExposedFunction("long"))
@@ -67,7 +67,7 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 		}
 
 		fun initializeDouble() {
-			val name = column.columnDataType.name.toLowerCase()
+			val name = column.columnDataType.name.lowercase()
 			if (name.contains("decimal") || name.contains("numeric")) {
 				initializeColumnParameters(
 					BigDecimal::class,
@@ -79,7 +79,7 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 		}
 
 		fun initializeString() {
-			val name = column.columnDataType.name.toLowerCase()
+			val name = column.columnDataType.name.lowercase()
 			when {
 				name.contains("varchar") || name.contains("varying") ->
 					initializeColumnParameters(String::class, getExposedFunction("varchar"))
@@ -102,7 +102,7 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 		}
 
 		fun initializeObject() {
-			when (column.columnDataType.name.toLowerCase()) {
+			when (column.columnDataType.name.lowercase()) {
 				"uuid" -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
 			}
 		}
@@ -125,7 +125,7 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 				initializeColumnParameters(dateTimeProvider.dateTimeClass, dateTimeProvider.dateTimeTableFun())
 
 			else -> {
-				val name = column.columnDataType.name.toLowerCase()
+				val name = column.columnDataType.name.lowercase()
 				when {
 					name.contains("uuid") -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
 					// can be 'varbinary'

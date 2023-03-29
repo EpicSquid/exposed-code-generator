@@ -137,7 +137,7 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
 				}
 				// char, varchar, binary -> length
 				String::class, ByteArray::class -> {
-					val collate = if (columnKClass == String::class && data.configuration?.collate != null) {
+					val collate = if (columnKClass == String::class && data.configuration.collate != null) {
 						CodeBlock.of(", %S", data.configuration.collate)
 					} else {
 						CodeBlock.of("")
@@ -145,7 +145,7 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
 					if (columnExposedFunction?.name in listOf("char", "varchar", "binary")) {
 						val size = when {
 							arguments.isNotEmpty() -> arguments[0]
-							column.size >= 0 && column.size <= MaxSize.MAX_VARCHAR_SIZE -> column.size.toString()
+							column.size >= 0 -> column.size.toString()
 							else -> MaxSize.MAX_VARCHAR_SIZE.toString()
 						}
 						add("%M(%S, $size$collate)", memberName, columnInfo.columnName)
