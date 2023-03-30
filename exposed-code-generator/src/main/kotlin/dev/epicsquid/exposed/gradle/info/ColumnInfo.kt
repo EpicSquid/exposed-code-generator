@@ -1,5 +1,6 @@
 package dev.epicsquid.exposed.gradle.info
 
+import dev.epicsquid.exposed.gradle.EnumColumnConfig
 import dev.epicsquid.exposed.gradle.builders.TableBuilderData
 import dev.epicsquid.exposed.gradle.getColumnName
 import dev.epicsquid.exposed.gradle.time.getDateTimeProviderFromConfig
@@ -39,6 +40,9 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 		private set
 
 	var isColumnTyped: Boolean = false
+		private set
+
+	var enumConfig: EnumColumnConfig? = null
 		private set
 
 	var nullable: Boolean = column.isNullable && !column.isPartOfPrimaryKey
@@ -100,10 +104,12 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 				name.contains("single") -> initializeColumnParameters(Float::class, getExposedFunction("float"))
 			}
 		}
+
 		val columnName = column.name
+		val name = column.columnDataType.name.lowercase()
 
 		// If the column has a custom type for it then override the default case
-		if (columnName in data.configuration.customMappings) {
+		if (columnName in data.configuration.customMappings && data.configuration.customMappings[columnName]!!.existingColumn == null) {
 			val customMapping = data.configuration.customMappings[columnName]!!
 			val funName = customMapping.columnFunctionName!!
 
@@ -111,6 +117,11 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 			columnStringFunction = funName.substringAfterLast(".")
 			columnStringPackage = funName.substringBeforeLast(".")
 			isColumnTyped = customMapping.isColumnTyped
+		} else if (name in data.configuration.enumMappings) {
+			enumConfig = data.configuration.enumMappings[name]
+			columnStringClass = enumConfig!!.enumClassName
+			columnStringFunction = "customEnumeration"
+			columnStringPackage = ""
 		} else {
 			when (column.columnDataType.typeMappedClass) {
 				Integer::class.javaObjectType -> initializeInteger()
@@ -130,8 +141,6 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 					initializeColumnParameters(dateTimeProvider.dateTimeClass, dateTimeProvider.dateTimeTableFun())
 
 				else -> {
-					val name = column.columnDataType.name.lowercase()
-
 					when {
 						name.contains("uuid") -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
 						// can be 'varbinary'

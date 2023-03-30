@@ -1,7 +1,7 @@
 package dev.epicsquid.exposed.gradle
 
 import com.squareup.kotlinpoet.FileSpec
-import org.jetbrains.exposed.gradle.tests.TestDB
+import dev.epicsquid.exposed.gradle.tests.TestDB
 import java.nio.file.Path
 import java.nio.file.Paths
 

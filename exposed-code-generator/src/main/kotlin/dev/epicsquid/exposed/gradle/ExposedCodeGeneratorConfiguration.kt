@@ -14,7 +14,8 @@ data class ExposedCodeGeneratorConfiguration(
 	val useFullNames: Boolean = generateSingleFile,
 	val useDao: Boolean = false,
 	val customMappings: Map<String, CustomMappings> = emptyMap(),
-	val ignoreTables: List<String> = emptyList()
+	val ignoreTables: List<String> = emptyList(),
+	val enumMappings: Map<String, EnumColumnConfig> = emptyMap()
 )
 
 data class CustomMappings(

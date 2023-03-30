@@ -5,7 +5,6 @@ import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.plugins.ExtensionAware
-import org.gradle.api.provider.MapProperty
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -34,9 +33,12 @@ abstract class ExposedGradleExtension @Inject constructor(
 		CustomColumnMapping::class.java
 	)
 	var ignoreTables: List<String> = listOf()
+	var enums: NamedDomainObjectContainer<EnumMapping> = objects.domainObjectContainer(
+		EnumMapping::class.java
+	)
 }
 
-abstract class ExposedDatabaseConnectionExtension @Inject constructor(objects: ObjectFactory) {
+abstract class ExposedDatabaseConnectionExtension @Inject constructor() {
 	var databaseDriver: String? = null
 	var databaseName: String? = null
 	var user: String? = null
@@ -55,4 +57,25 @@ abstract class CustomColumnMapping @Inject constructor(
 	var columnFunctionName: String? = null
 	var isColumnTyped: Boolean = false
 	var existingColumn: String? = null
+}
+
+abstract class EnumMapping @Inject constructor(
+	val name: String,
+) : Serializable {
+	/**
+	 * The name of the enum in the database, or the declaration to create it.
+	 * This is not needed if the enum is already in the DB for MySQL or H2
+	 */
+	var databaseDeclaration: String? = null
+
+	/**
+	 * The fully qualified class name of the enum in your codebase
+	 */
+	var enumClassName: String? = null
+
+	/**
+	 * If using postgres, the fully qualified classname of the PGEnum implementation to handle the PGObject return from
+	 * the postgresql JDBC driver
+	 */
+	var pgEnumClassName: String? = null
 }

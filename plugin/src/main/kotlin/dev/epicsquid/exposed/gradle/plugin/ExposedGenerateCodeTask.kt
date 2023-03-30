@@ -1,9 +1,6 @@
 package dev.epicsquid.exposed.gradle.plugin
 
-import dev.epicsquid.exposed.gradle.CustomMappings
-import dev.epicsquid.exposed.gradle.ExposedCodeGenerator
-import dev.epicsquid.exposed.gradle.ExposedCodeGeneratorConfiguration
-import dev.epicsquid.exposed.gradle.MetadataGetter
+import dev.epicsquid.exposed.gradle.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.DirectoryProperty
@@ -16,6 +13,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
+import org.jetbrains.exposed.sql.vendors.*
 
 
 abstract class ExposedGenerateCodeTask : DefaultTask() {
@@ -143,6 +141,16 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 
 	@get:Input
 	@get:Option(
+		option = "enums",
+		description = "Set enum mappings manually, in the form of [type] = ([fully-qualified class name], " +
+				"[fully-qualified function name]), " +
+				"e.g. jsonb = (com.example.jsonb.Jsonb, com.example.jsonb.jsonb)"
+	)
+	@get:Optional
+	abstract var enums: NamedDomainObjectContainer<EnumMapping>
+
+	@get:Input
+	@get:Option(
 		option = "ignoreTables",
 		description = "List of tables to ignore when generating code"
 	)
@@ -184,9 +192,31 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 					value.existingColumn
 				)
 			}.toMap(),
-			ignoreTables.getOrElse(emptyList())
+			ignoreTables.getOrElse(emptyList()),
+			enums.asMap.map { (key, value) ->
+				key to EnumColumnConfig(
+					value.databaseDeclaration,
+					value.enumClassName!!,
+					value.pgEnumClassName
+				)
+			}.toMap()
 		)
-		val exposedCodeGenerator = ExposedCodeGenerator(tables, config)
+		val dialect = when(databaseDriver.get()) {
+			"postgresql" -> DBDialect.POSTGRESQL
+			"mysql" -> DBDialect.MYSQL
+			"mariadb" -> DBDialect.MARIADB
+			"sqlserver" -> DBDialect.SQLSERVER
+			"sqlite" -> DBDialect.SQLITE
+			"h2" -> DBDialect.H2
+			"oracle" -> DBDialect.ORACLE
+			else -> null
+		}
+
+		val exposedCodeGenerator = ExposedCodeGenerator(
+			tables = tables,
+			config = config,
+			dialect = dialect
+		)
 
 		val files = exposedCodeGenerator.generateExposedTables()
 

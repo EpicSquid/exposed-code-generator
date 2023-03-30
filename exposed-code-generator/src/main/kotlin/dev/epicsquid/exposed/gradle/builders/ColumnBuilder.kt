@@ -34,9 +34,10 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
 			&& columnInfo.columnExposedFunction == null
 			&& columnInfo.columnStringFunction == null
 			&& columnInfo.columnStringPackage == null
+			&& columnInfo.enumConfig == null
 		) {
 			val column = columnInfo.column
-			throw UnsupportedTypeException("Unable to map column ${column.name} of type ${column.columnDataType.name} to an Exposed column object.")
+			throw UnsupportedTypeException("Unable to map column ${column.name} of type ${column.columnDataType.name}, ${column.columnDataType.typeMappedClass} to an Exposed column object.")
 		}
 		if (data.configuration.useDao && columnInfo.column.referencedColumn != null) {
 			return PropertySpec.builder(
@@ -156,6 +157,60 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
 				}
 
 				else -> add("%M(%S)", memberName, columnInfo.columnName)
+			}
+		} else if (columnInfo.enumConfig != null) {
+			val enumConfig = columnInfo.enumConfig!!
+			val pack = enumConfig.enumClassName.substringBeforeLast(".")
+			val clazz = enumConfig.enumClassName.substringAfterLast(".")
+			val className = ClassName(pack, clazz)
+
+			when (data.dialect) {
+				DBDialect.H2 -> enumConfig.databaseDeclaration?.let {
+					add(
+						"%M(%S, %S, { value -> %T.values()[it as Int] }, { it.name })",
+						memberName,
+						columnInfo.columnName,
+						enumConfig.databaseDeclaration,
+						className
+					)
+				} ?: add(
+					"%M(%S, { value -> %T.values()[it as Int] }, { it.name })",
+					memberName,
+					columnInfo.columnName,
+					className
+				)
+
+				DBDialect.POSTGRESQL -> {
+					val pgPack = enumConfig.pgEnumClassName!!.substringBeforeLast(".")
+					val pgClazz = enumConfig.pgEnumClassName!!.substringAfterLast(".")
+					val pgClassName = ClassName(pgPack, pgClazz)
+					add(
+						"%M(%S, %S, { value -> %T.valueOf(value as String) }, { %T(%S, it) })",
+						memberName,
+						columnInfo.columnName,
+						enumConfig.databaseDeclaration,
+						className,
+						pgClassName,
+						enumConfig.databaseDeclaration
+					)
+				}
+
+				DBDialect.MYSQL -> enumConfig.databaseDeclaration?.let {
+					add(
+						"%M(%S, %S, { value -> %T.valueOf(value as String) }, { it.name })",
+						memberName,
+						columnInfo.columnName,
+						enumConfig.databaseDeclaration,
+						className
+					)
+				} ?: add(
+					"%M(%S, { value -> %T.valueOf(value as String) }, { it.name })",
+					memberName,
+					columnInfo.columnName,
+					className
+				)
+
+				else -> throw UnsupportedTypeException("The type ${enumConfig.enumClassName} is not supported with this database dialect.")
 			}
 		} else {
 			if (columnInfo.isColumnTyped)
