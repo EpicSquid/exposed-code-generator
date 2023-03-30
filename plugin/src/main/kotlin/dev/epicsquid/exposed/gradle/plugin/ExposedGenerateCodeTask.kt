@@ -189,7 +189,8 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 					value.columnPropertyClassName,
 					value.columnFunctionName,
 					value.isColumnTyped,
-					value.existingColumn
+					value.existingColumn,
+					value.idColumnClassName
 				)
 			}.toMap(),
 			ignoreTables.getOrElse(emptyList()),

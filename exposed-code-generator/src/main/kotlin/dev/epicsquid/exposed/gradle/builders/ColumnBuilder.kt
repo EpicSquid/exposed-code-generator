@@ -415,7 +415,10 @@ class IdColumnBuilder(column: Column, data: TableBuilderData) : ColumnBuilder(co
 	override val builder = PropertySpec.builder(
 		"id",
 		ExposedColumn::class.asTypeName()
-			.parameterizedBy(EntityID::class.asTypeName().parameterizedBy(columnInfo.columnKClass!!.asTypeName())),
+			.parameterizedBy(
+				EntityID::class.asTypeName()
+					.parameterizedBy(columnInfo.columnKClass?.asTypeName() ?: ClassName.bestGuess(columnInfo.columnStringClass!!))
+			),
 		KModifier.OVERRIDE
 	)
 

@@ -22,5 +22,6 @@ data class CustomMappings(
 	var columnPropertyClassName: String?,
 	var columnFunctionName: String?,
 	var isColumnTyped: Boolean = false,
-	var existingColumn: String? = null
+	var existingColumn: String? = null,
+	var idColumnClassName: String? = null
 ) : Serializable

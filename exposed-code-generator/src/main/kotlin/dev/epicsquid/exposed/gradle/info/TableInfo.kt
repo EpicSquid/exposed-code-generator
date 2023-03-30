@@ -32,7 +32,10 @@ data class TableInfo(val table: Table, private val data: TableBuilderData) {
 			Int::class -> IntIdTable::class
 			Long::class -> LongIdTable::class
 			UUID::class -> UUIDTable::class
+			null -> null
 			else -> IdTable::class
 		}
 	}
+	val superclassString =
+		superclass?.let { null } ?: data.configuration.customMappings[idColumn?.name]?.idColumnClassName
 }

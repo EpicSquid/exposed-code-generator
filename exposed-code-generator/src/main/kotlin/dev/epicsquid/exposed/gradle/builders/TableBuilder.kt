@@ -39,7 +39,11 @@ class TableBuilder(
 			builder.superclass(tableInfo.superclass.parameterizedBy(idColumnClass!!))
 			builder.addSuperclassConstructorParameter("%S", tableInfo.tableName)
 		} else {
-			builder.superclass(tableInfo.superclass)
+			tableInfo.superclass?.let { builder.superclass(it) } ?: tableInfo.superclassString?.let {
+				builder.superclass(
+					ClassName.bestGuess(it)
+				)
+			}
 			builder.addSuperclassConstructorParameter("%S, %S", tableInfo.tableName, idColumnInfo.columnName)
 		}
 	}
@@ -51,7 +55,11 @@ class TableBuilder(
 		if (tableInfo.idColumn != null) {
 			generateExposedIdTableDeclaration()
 		} else {
-			builder.superclass(tableInfo.superclass)
+			tableInfo.superclass?.let { builder.superclass(it) } ?: tableInfo.superclassString?.let {
+				builder.superclass(
+					ClassName.bestGuess(it)
+				)
+			}
 			builder.addSuperclassConstructorParameter("%S", tableInfo.tableName)
 		}
 	}

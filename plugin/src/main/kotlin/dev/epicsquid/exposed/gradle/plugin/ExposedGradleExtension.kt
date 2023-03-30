@@ -57,6 +57,7 @@ abstract class CustomColumnMapping @Inject constructor(
 	var columnFunctionName: String? = null
 	var isColumnTyped: Boolean = false
 	var existingColumn: String? = null
+	var idColumnClassName: String? = null
 }
 
 abstract class EnumMapping @Inject constructor(
