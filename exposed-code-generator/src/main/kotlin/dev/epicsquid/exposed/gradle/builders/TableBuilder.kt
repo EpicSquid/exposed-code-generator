@@ -91,12 +91,7 @@ class TableBuilder(
 				columnBuilder.generateExposedColumnInitializer(data.columnToPropertySpec, data.columnToTableSpec)
 				val columnPropertySpec = columnBuilder.build()
 
-				if (column != idColumn || tableInfo.superclass !in listOf(
-						IntIdTable::class,
-						LongIdTable::class,
-						UUIDTable::class
-					) || !hasIdTableClass
-				) {
+				if (column != idColumn || !hasIdTableClass) {
 					builder.addProperty(columnPropertySpec)
 				}
 
@@ -111,12 +106,7 @@ class TableBuilder(
 	 * Generates a primary key for table from [tableInfo]
 	 */
 	fun generateExposedTablePrimaryKey() {
-		if (tableInfo.primaryKeyColumns.isEmpty() || tableInfo.superclass in listOf(
-				IntIdTable::class,
-				LongIdTable::class,
-				UUIDTable::class
-			)
-		) {
+		if (tableInfo.primaryKeyColumns.isEmpty() || hasIdTableClass) {
 			return
 		}
 
