@@ -30,6 +30,7 @@ class TableBuilder(
 ) {
 	private val tableInfo = TableInfo(table, data)
 	private val builder = TypeSpec.objectBuilder(getObjectNameForTable(table))
+	private var hasIdTableClass: Boolean = false
 
 	private fun generateExposedIdTableDeclaration() {
 		val idColumn = tableInfo.idColumn!! // it's guaranteed to be non-null
@@ -39,6 +40,7 @@ class TableBuilder(
 			builder.superclass(tableInfo.superclass.parameterizedBy(idColumnClass!!))
 			builder.addSuperclassConstructorParameter("%S", tableInfo.tableName)
 		} else {
+			hasIdTableClass = true
 			tableInfo.superclass?.let { builder.superclass(it) } ?: tableInfo.superclassString?.let {
 				builder.superclass(
 					ClassName.bestGuess(it)
@@ -93,7 +95,7 @@ class TableBuilder(
 						IntIdTable::class,
 						LongIdTable::class,
 						UUIDTable::class
-					)
+					) || !hasIdTableClass
 				) {
 					builder.addProperty(columnPropertySpec)
 				}
