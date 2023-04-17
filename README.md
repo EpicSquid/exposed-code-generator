@@ -7,9 +7,24 @@ This Gradle plugin connects to a database and generates Exposed table definition
 ### Usage:
 
 Add plugin declaration into your build script:
+
+You will need to set up a personal access token for github packages. You can do so following the guide 
+[here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-gradle-registry).
 ```kotlin
-plugins {
-    id("dev.epicsquid.exposed.gradle.plugin")
+pluginManagement {
+	repositories {
+     maven {
+        name = "GithubPackagesExposedCodeGenerator"
+        url = uri("https://maven.pkg.github.com/EpicSquid/exposed-code-generator")
+        credentials {
+           username = System.getenv("GITHUB_USERNAME")
+           password = System.getenv("GITHUB_TOKEN")
+        }
+     }
+  }
+   plugins {
+      id("dev.epicsquid.exposed.gradle.plugin")
+   }
 }
 ```
 Use gradle task as
@@ -17,14 +32,64 @@ Use gradle task as
 `gradle generateExposedCode`
 
 ### How to specify parameters:
-Using a task configuration in a `build.gradle` file
+Using a task configuration in a `build.gradle` file you can specify how you want all the tables to be generated.
+The following parameters are available:
 
 ```kotlin
 exposedCodeGeneratorConfig {
-    databaseDriver = "postgresql"
-    databaseName = "pltest"
-    user = "root"
-    configFilepath = "exposedCodeGeneratorConfig.yml"
+   // Set up the database connection parameters. 
+   // Either all of the following can be filled out or a single connectionUrl can be provided
+   database {
+      user = "root"
+      password = "password"
+      databaseName = "postgres"
+      databaseDriver = "postgreql"
+      host = "localhost"
+      port = "5432"
+   }
+
+   outputDirectory.set(file("build/generated/exposed")) // Specify the output directory for the generated files
+   generateSingleFile = false // Should all the database tables be in a single file
+   packageName = "dev.epicsquid.model.generated" // Package name to use for the generated files
+
+   // Specify what date-time library to use for timestamp and date columns. Can be any of the following:
+   // "java-time"
+   // "jodatime"
+   // "kotlin-datetime"
+   // defaults to "java-time" if not present
+   dateTimeProvider = "kotlin-datetime"
+
+   useFullNames = false // Use schema.table name for Table class names. Defaults to true
+   useDao = true // Use the DAO for generated tables to define references. Defaults to false
+
+   // Custom mappings for classes in your project for columns not supported by exposed.
+   customMappings {
+      // Use the name of the column you are creating a custom mapping for
+      create("json_column") {
+         // The type of the column class (in the case of json, this could be the serializable data class)
+         columnPropertyClassName = "dev.epicsquid.model.columns.JsonColumnType"
+         // The column function to call
+         columnFunctionName = "dev.epicsquid.model.columns.json"
+         // Force generating a generic type definition for the column function call
+         isColumnTyped = true
+      }
+   }
+
+   // Custom mappings for enums using the customEnumeration function
+   enums {
+      create("custom_enum") {
+         // The enum class name in your project 
+         enumClassName = "dev.epicsquid.model.enums.CustomEnum"
+         // The enum declaration in the database. In postgres this must be the name of the type created in the database.
+         // For H2 and mysql, this can be the Enum() declaration in sql
+         databaseDeclaration = "custom_enum"
+         // If using postgres, provide your implementation of the PGEnum object for conversion
+         pgEnumClassName = "dev.epicsquid.model.PGEnum"
+      }
+   }
+
+   // Tables to ignore when generating code. Must be fully qualified with the schema name
+   ignoreTables = listOf("public.flyway_schema_history")
 }
 ```
 ### Database connection parameters:
@@ -42,42 +107,3 @@ exposedCodeGeneratorConfig {
     8. `connectionProperties` - map of properties that will be added to `connectionURL` string
     
 All of those parameters are optional; however, the expected behavior is that the user does not mix a `connectionURL` with other parameters.
-
-### Exposed code generation parameters:
-
-1. `configFilename` -- a path to a `.yml` config file
-
-2. Specifying each configuration parameter:
-    1. `packageName` -- the name of the package the generated files belong to
-    2. `generateSingleFile` -- set to `true` if all tables are to be placed in the same file; otherwise a separate file is created for each table, titled same as table name in camel case
-    3. `generatedFileName` -- specify only when `generateSingleFile = true`; the name of the file to be generated. Default filename is `GeneratedTables.kt`
-    4. `collate` -- specify collation method for all string (`char`/`varchar`/`text`) columns in the database (e.g. `NOCASE` for SQLite)
-    5. `columnMappings` -- in case the code generator is unable to provide a satisfactory definition for the column, it's possible to provide its definition directly in form of Exposed code (e.g. in order to map certain `Double` columns to `float`, use the following: `mapped_column_table.float_column: float("float_column")`; the column should be addressed as `[table_name].[column_name]`)
-    
-### Output directory:
-
-By default, the generated files are written to `build/tables` directory (in case of a single file generation, the filename is `GeneratedTables.kt`). The parameter is `outputDirectory` and it can be set like all the other ones.
-
-
-# Shadow plugin relocate extension for kotlin classes
-For now, [Shadow](https://github.com/johnrengelman/shadow) gradle plugin relocates kotlin classes not so good in a place of reflection.
-Some class metadata stayed not relocated that brakes the code in runtime. 
-
-If you need the proper kotlin class relocation use `ShadowJar.kotlinRelocate` function instead of `ShadowJar.relocate`.
-Don't use `kotlinRelocate` on java dependencies as it will add overhead on relocation time without any benefit.
-
-Also, if you plan to relocate Exposed dependencies don't forget to add `mergeServiceFiles()` call in your task declaration.
-
-```kotlin
-plugins {
-   id("com.github.johnrengelman.shadow")
-   id("com.jetbrains.exposed.gradle.plugin")
-}
-
-tasks.shadowJar {
-   mergeServiceFiles()
-   kotlinRelocate("org.jetbrains.exposed", "my.own.project.exposed")
-}
-```
-Please note that it's still impossible to relocate kotlin-stdlib itself as it has internal synthetic classes like `kotlin.Any` that will not be relocated.      
-    

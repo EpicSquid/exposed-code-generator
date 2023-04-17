@@ -110,3 +110,15 @@ tasks.withType<KotlinCompile> {
 	kotlinOptions.jvmTarget = "1.8"
 }
 
+publishing {
+	repositories {
+		maven {
+			name = "GitHubPackages"
+			url = uri("https://maven.pkg.github.com/EpicSquid/exposed-code-generator")
+			credentials {
+				username = System.getenv("GITHUB_PUBLISH_USER")
+				password = System.getenv("GITHUB_PUBLISH_TOKEN")
+			}
+		}
+	}
+}
