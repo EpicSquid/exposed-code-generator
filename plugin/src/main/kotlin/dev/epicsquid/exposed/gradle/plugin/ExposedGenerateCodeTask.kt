@@ -151,6 +151,16 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 
 	@get:Input
 	@get:Option(
+		option = "defaultExpressions",
+		description = "Set defaultExpressions mappings manually, in the form of [type] = ([fully-qualified class name], " +
+			"[fully-qualified function name]), " +
+			"e.g. jsonb = (com.example.jsonb.Jsonb, com.example.jsonb.jsonb)"
+	)
+	@get:Optional
+	abstract var defaultExpressions: NamedDomainObjectContainer<DefaultExpressionMapping>
+
+	@get:Input
+	@get:Option(
 		option = "ignoreTables",
 		description = "List of tables to ignore when generating code"
 	)
@@ -200,6 +210,9 @@ abstract class ExposedGenerateCodeTask : DefaultTask() {
 					value.enumClassName!!,
 					value.pgEnumClassName
 				)
+			}.toMap(),
+			defaultExpressions.asMap.map { (key, value) ->
+				key to value.expressionClassName!!
 			}.toMap()
 		)
 		val dialect = when(databaseDriver.get()) {

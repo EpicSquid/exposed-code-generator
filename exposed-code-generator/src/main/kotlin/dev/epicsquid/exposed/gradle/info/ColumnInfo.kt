@@ -47,6 +47,9 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 
 	var nullable: Boolean = column.isNullable && !column.isPartOfPrimaryKey
 
+	var defaultValue: String? = null
+		private set
+
 	init {
 		val exposedChar: KFunction<ExposedColumn<String>> = Table::class.memberFunctions.find { func ->
 			func.name == "char" && func.parameters.any { p -> p.name == "length" }
@@ -150,6 +153,10 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 					}
 				}
 			}
+		}
+
+		if (column.defaultValue != null && data.configuration.defaultExpressions.contains(column.defaultValue)) {
+			defaultValue = data.configuration.defaultExpressions[column.defaultValue]
 		}
 	}
 

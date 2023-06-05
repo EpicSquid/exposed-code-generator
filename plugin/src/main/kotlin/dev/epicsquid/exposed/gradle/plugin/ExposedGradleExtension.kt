@@ -36,6 +36,9 @@ abstract class ExposedGradleExtension @Inject constructor(
 	var enums: NamedDomainObjectContainer<EnumMapping> = objects.domainObjectContainer(
 		EnumMapping::class.java
 	)
+	var defaultExpressions: NamedDomainObjectContainer<DefaultExpressionMapping> = objects.domainObjectContainer(
+		DefaultExpressionMapping::class.java
+	)
 }
 
 abstract class ExposedDatabaseConnectionExtension @Inject constructor() {
@@ -79,4 +82,13 @@ abstract class EnumMapping @Inject constructor(
 	 * the postgresql JDBC driver
 	 */
 	var pgEnumClassName: String? = null
+}
+
+abstract class DefaultExpressionMapping(
+	val name: String,
+) : Serializable {
+	/**
+	 * The fully qualified class name of the expression in your codebase
+	 */
+	var expressionClassName: String? = null
 }

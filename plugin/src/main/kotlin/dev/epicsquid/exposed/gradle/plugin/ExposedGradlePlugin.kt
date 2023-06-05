@@ -36,6 +36,7 @@ abstract class ExposedGradlePlugin : Plugin<Project> {
 			it.outputDirectory.set(extension.outputDirectory)
 			it.customMappings = extension.customMappings
 			it.enums = extension.enums
+			it.defaultExpressions = extension.defaultExpressions
 			it.ignoreTables.set(extension.ignoreTables)
 		}
 	}

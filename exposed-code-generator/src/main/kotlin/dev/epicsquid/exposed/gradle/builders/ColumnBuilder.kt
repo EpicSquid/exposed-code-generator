@@ -258,6 +258,15 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
 		}
 	}
 
+	private fun CodeBlock.Builder.generateDefaultCall(column: ColumnInfo) {
+		if (column.defaultValue != null) {
+			val defaultValue = column.defaultValue!!
+			val defaultExpressionClassName =
+				ClassName(defaultValue.substringBeforeLast("."), defaultValue.substringAfterLast("."))
+			add(".%M(%T)", MemberName("", "defaultExpression"), defaultExpressionClassName)
+		}
+	}
+
 	private fun CodeBlock.Builder.generateNullableCall(column: Column) {
 		if (column.isNullable && !column.isPartOfPrimaryKey) {
 			add(".%M()", MemberName("", "nullable"))
@@ -387,6 +396,7 @@ open class ColumnBuilder(column: Column, private val data: TableBuilderData) {
 	) {
 		val column = columnInfo.column
 		generateBasicConstraints(column, columnToPropertySpec, columnToTableSpec)
+		generateDefaultCall(columnInfo)
 		generateNullableCall(column)
 	}
 

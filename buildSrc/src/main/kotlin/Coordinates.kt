@@ -1,7 +1,7 @@
 object PluginCoordinates {
     const val ID = "dev.epicsquid.exposed.gradle.plugin"
     const val GROUP = "dev.epicsquid.exposed.gradle"
-    const val VERSION = "0.3.0"
+    const val VERSION = "0.3.1"
     const val IMPLEMENTATION_CLASS = "dev.epicsquid.exposed.gradle.plugin.ExposedGradlePlugin"
 }
 
