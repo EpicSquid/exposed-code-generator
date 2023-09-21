@@ -60,7 +60,7 @@ private class KotlinRelocator(private val task: ShadowJar, private val delegate:
 
 		fun patchMetadata(task: ShadowJar) {
 			val zip = task.archiveFile.get().asFile.toPath()
-			FileSystems.newFileSystem(zip, null).use { fs ->
+			FileSystems.newFileSystem(zip).use { fs ->
 				foundRelocatedSubPaths[task]?.forEach {
 					val packagePath = fs.getPath(it)
 					if (Files.exists(packagePath) && Files.isDirectory(packagePath)) {

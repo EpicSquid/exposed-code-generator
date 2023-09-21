@@ -116,7 +116,7 @@ publishing {
 			name = "GitHubPackages"
 			url = uri("https://maven.pkg.github.com/EpicSquid/exposed-code-generator")
 			credentials {
-				username = System.getenv("GITHUB_PUBLISH_USER")
+				username = System.getenv("GITHUB_PUBLISH_USERNAME")
 				password = System.getenv("GITHUB_PUBLISH_TOKEN")
 			}
 		}
