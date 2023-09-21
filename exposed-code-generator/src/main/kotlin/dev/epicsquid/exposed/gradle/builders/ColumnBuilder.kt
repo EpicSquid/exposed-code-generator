@@ -470,6 +470,7 @@ open class MappedColumnBuilder(column: Column, private val columnMapping: String
 		"char", "varchar", "text" -> String::class
 		"date" -> dateTimeProvider.dateClass
 		"datetime" -> dateTimeProvider.dateTimeClass
+		"time" -> dateTimeProvider.timeClass
 		in customMappings -> Class.forName(customMappings[functionCall]!!.columnPropertyClassName).kotlin
 		else -> throw UnparseableExposedCallException("Unable to determine type of expression $functionCall and generate column.")
 	}

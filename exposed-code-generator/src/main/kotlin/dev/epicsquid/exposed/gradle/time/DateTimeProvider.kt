@@ -10,8 +10,10 @@ import kotlin.reflect.KFunction
 interface DateTimeProvider {
 	val dateClass: KClass<*>
 	val dateTimeClass: KClass<*>
+	val timeClass: KClass<*>
 	fun <S> dateTableFun(): KFunction<Column<S>>
 	fun <S> dateTimeTableFun(): KFunction<Column<S>>
+	fun <S> timeTableFun(): KFunction<Column<S>>
 }
 
 fun getDateTimeProviderFromConfig(name: String?) = when (name) {

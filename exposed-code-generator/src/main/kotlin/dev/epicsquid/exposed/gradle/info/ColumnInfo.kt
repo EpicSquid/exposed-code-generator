@@ -11,6 +11,7 @@ import java.math.BigDecimal
 import java.sql.Blob
 import java.sql.Clob
 import java.sql.Date
+import java.sql.Time
 import java.sql.Timestamp
 import java.util.*
 import kotlin.reflect.KClass
@@ -137,6 +138,9 @@ data class ColumnInfo(val column: Column, private val data: TableBuilderData) {
 				Clob::class.javaObjectType -> initializeColumnParameters(String::class, getExposedFunction("text"))
 				Blob::class.javaObjectType -> initializeColumnParameters(ExposedBlob::class, getExposedFunction("blob"))
 				UUID::class.javaObjectType -> initializeColumnParameters(UUID::class, getExposedFunction("uuid"))
+				Time::class.javaObjectType, dateTimeProvider.timeClass.javaObjectType ->
+					initializeColumnParameters(dateTimeProvider.timeClass, dateTimeProvider.timeTableFun())
+
 				Date::class.javaObjectType, dateTimeProvider.dateClass.javaObjectType ->
 					initializeColumnParameters(dateTimeProvider.dateClass, dateTimeProvider.dateTableFun())
 

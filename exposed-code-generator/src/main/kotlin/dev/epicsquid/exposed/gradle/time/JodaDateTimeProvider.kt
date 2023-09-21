@@ -2,10 +2,12 @@ package dev.epicsquid.exposed.gradle.time
 
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.javatime.time
 import org.jetbrains.exposed.sql.jodatime.date
 import org.jetbrains.exposed.sql.jodatime.datetime
 import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
+import org.joda.time.LocalTime
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 
@@ -13,6 +15,7 @@ import kotlin.reflect.KFunction
 object JodaDateTimeProvider : DateTimeProvider {
 	override val dateClass: KClass<LocalDate> = LocalDate::class
 	override val dateTimeClass: KClass<LocalDateTime> = LocalDateTime::class
+	override val timeClass: KClass<LocalTime> = LocalTime::class
 
 	override fun <S> dateTableFun(): KFunction<Column<S>> {
 		return Table::date as KFunction<Column<S>>
@@ -22,4 +25,7 @@ object JodaDateTimeProvider : DateTimeProvider {
 		return Table::datetime as KFunction<Column<S>>
 	}
 
+	override fun <S> timeTableFun(): KFunction<Column<S>> {
+		return Table::datetime as KFunction<Column<S>>
+	}
 }
